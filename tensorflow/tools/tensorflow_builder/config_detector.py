@@ -65,6 +65,7 @@ from __future__ import print_function
 
 import collections
 import json
+import platform
 import re
 import subprocess
 import sys
@@ -73,6 +74,7 @@ from absl import flags
 
 from tensorflow.tools.tensorflow_builder.data import cuda_compute_capability
 
+LINUX = 'Linux'
 FLAGS = flags.FLAGS
 # Define all flags
 flags.DEFINE_boolean("save_output", True, "Save output to a file. [True/False]")
@@ -120,7 +122,7 @@ cmds_linux = {
 }
 
 cmds_all = {
-    "linux": cmds_linux,
+    LINUX: cmds_linux,
 }
 
 # Global variable(s).
@@ -147,6 +149,10 @@ def run_shell_cmd(args):
   return proc.communicate()
 
 
+def is_linux():
+    return platform.system() == LINUX
+
+
 def get_platform():
   """Retrieves platform information.
 
@@ -158,18 +164,11 @@ def get_platform():
       e.g. 'linux'
   """
   global PLATFORM
-  cmd = "uname"
-  out, err = run_shell_cmd(cmd)
-  platform_detected = out.strip().lower()
-  if platform_detected != "linux":
-    if err and FLAGS.debug:
-      print("Error in detecting platform:\n %s" % str(err))
-
+  if is_linux():
+    PLATFORM = LINUX
+  else:
     print("Error: Detected unsupported operating system.\nStopping...")
     sys.exit(1)
-  else:
-    PLATFORM = platform_detected
-
   return PLATFORM
 
 
